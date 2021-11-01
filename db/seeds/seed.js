@@ -73,7 +73,6 @@ const seed = (data) => {
     })
     .then(() => {
       // 😄 INSERTING INTO USERS
-      console.log('Inserting into categories done, now inserting into users');
       const queryStr = format(
         `INSERT INTO users (username, avatar_url, name) VALUES %L RETURNING*;`,
         userData.map((user) => [user.username, user.avatar_url, user.name])
@@ -82,7 +81,6 @@ const seed = (data) => {
     })
     .then(() => {
       // 😄 INSERTING INTO REVIEWS
-      console.log('Inserting into users done, now inserting into reviews');
       const queryStr = format(
         `INSERT INTO reviews (title, review_body, designer, review_img_url, votes, category, owner, created_at) VALUES %L RETURNING*;`,
         reviewData.map((review) => [review.title, review.review_body, review.designer, review.review_img_url, review.votes, review.category, review.owner, review.created_at])
@@ -91,14 +89,10 @@ const seed = (data) => {
     })
     .then(() => {
       // 😄 INSERTING INTO COMMENTS
-      console.log('Inserting into reviews done, now inserting into comments');
       const queryStr = format(
         `INSERT INTO comments (author, review_id, votes, created_at, body) VALUES %L RETURNING*;`,
         commentData.map((comment) => [comment.author, comment.review_id, comment.votes, comment.created_at, comment.body])
       );
-    })
-    .then(() => {
-      console.log('Inserting into comments done');
     })
 };
 
