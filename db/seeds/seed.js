@@ -93,6 +93,7 @@ const seed = (data) => {
         `INSERT INTO comments (author, review_id, votes, created_at, body) VALUES %L RETURNING*;`,
         commentData.map((comment) => [comment.author, comment.review_id, comment.votes, comment.created_at, comment.body])
       );
+      return db.query(queryStr);
     })
 };
 
