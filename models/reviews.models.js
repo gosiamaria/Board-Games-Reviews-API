@@ -24,3 +24,42 @@ exports.fetchReviewsById = (review_id) => {
     }
   })
 }
+
+// exports.updateReviewById = (review_id, requestedUpdate) => {
+//   let requestKey = '';
+//   for(property in requestedUpdate) {
+//     request += property;
+//   }
+
+//   let requestVal = '';
+//   for(property in requestedUpdate) {
+//     requestVal += requestedUpdate[property];
+//   }
+
+//   const updateBank = ['title', 'review_img_url', 'review_body', 'votes'];
+
+//   if(!updateBank.includes(requestKey)) {
+//     return Promise.reject({status:400, msg:'Invalid request'})
+//   }
+//   return db
+//   .query(`
+//   UPDATE reviews
+//   SET $1 = $2
+//   WHERE review_id = $3 RETURNING*;
+//   `, [requestKey, requestVal, review_id])
+//   .then(({ rows }) => {
+//     return rows[0];
+//   })
+// }
+
+exports.updateVotes = (review_id, inc_votes) => {
+  return db
+  .query(`
+  UPDATE reviews
+  SET votes = votes + $1
+  WHERE review_id = $2
+  RETURNING*;`, [inc_votes, review_id])
+  .then(({ rows }) => {
+    return rows[0]
+  })
+}
