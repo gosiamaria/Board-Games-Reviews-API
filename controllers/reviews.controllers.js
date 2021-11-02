@@ -4,7 +4,6 @@ const {
 } = require('../models/reviews.models.js');
 
 exports.getAllReviews = (req, res, next) => {
-  console.log('inside controller');
   fetchAllReviews()
   .then((reviews) => {
     res.status(200).send({ reviews })
@@ -13,7 +12,6 @@ exports.getAllReviews = (req, res, next) => {
 }
 
 exports.getReviewsById = (req, res, next) => {
-  console.log('inside controller');
   const { review_id } = req.params;
 
   fetchReviewsById(review_id)

@@ -62,14 +62,12 @@ describe('/api/reviews', () => {
     })
 
     it('responds with 200 and returns the review object by review_id with following properties: owner, title, review_id, review_body, designer, review img url, category, created_at, votes, comment_count', () => {
+      const review_id = 2;
       return request(app)
-      .get('/api/reviews/2')
+      .get(`/api/reviews/${review_id}`)
       .expect(200)
       .then(({ body }) => {
-        
         const { review } = body;
-        console.log(review);
-
         expect(review).toEqual(
           expect.objectContaining({
           owner: expect.any(String),
@@ -82,6 +80,26 @@ describe('/api/reviews', () => {
         )
         expect(review.votes).toBe(5);
         //expect(review.comment_count).toBe(3)
+      })
+    })
+
+    it('responds with 400 if the review_id is wrong type - bad request', () => {
+      const review_id = 'not_an_id';
+      return request(app)
+      .get(`/api/reviews/${review_id}`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Invalid path type');
+      })
+    })
+
+    it('responds with 404 if the review_id is valid but doesn\'t exist - not found', () => {
+      const review_id = 9999;
+      return request(app)
+      .get(`/api/reviews/${review_id}`)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Review not found');
       })
     })
   })
