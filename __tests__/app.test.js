@@ -331,27 +331,37 @@ describe('api.reviews/:review_id/comments', () => {
       })
     })
     
-    it('responds with 404 if review_id is valid but not found', () => {
+    it('responds with 404 if review_id is not found', () => {
       const review_id = 9999;
       return request(app)
       .get(`/api/reviews/${review_id}/comments`)
       .expect(404)
       .then(({ body }) => {
-        expect(body.msg).toBe('Path not found')
+        expect(body.msg).toBe('Review_id does not exist')
       })
     })
 
-    it('responds with 400 if review_id is invalid type - bad request', () => {
-      const review_id = 'not_an_id';
+    it('responds with 200 and an empty array if no comments found for that review', () => {
+      const review_id = 1;
       return request(app)
       .get(`/api/reviews/${review_id}/comments`)
-      .expect(400)
+      .expect(200)
       .then(({ body }) => {
-        expect(body.msg).toBe('Bad request')
+        expect(body.comments).toEqual([])
       })
     })
 
-    it('responds with 404 if given an invlid endpoint(ie. typo in \'comments\'', () => {
+    // it('responds with 400 if review_id is invalid type - bad request', () => {
+    //   const review_id = 'not_an_id';
+    //   return request(app)
+    //   .get(`/api/reviews/${review_id}/comments`)
+    //   .expect(400)
+    //   .then(({ body }) => {
+    //     expect(body.msg).toBe('Bad request')
+    //   })
+    // })
+
+    it('responds with 404 if given an invalid endpoint(ie. typo in \'comments\'', () => {
       const review_id = 3;
       return request(app)
       .get(`/api/reviews/${review_id}/not_comments`)
@@ -364,12 +374,56 @@ describe('api.reviews/:review_id/comments', () => {
 
   describe.skip('POST', () => {
     it('responds with 201 and the posted comment', () => {
-      const review_id = 3;
+      const review_id = 2;
+      const newComment = {
+        username: 'mallionaire',
+        body: 'Jenga is a fun family game'
+      }
       return request(app)
       .post(`/api/reviews/${review_id}/comments`)
+      .send(newComment)
       .expect(201)
       .then(({ body }) => {
+        const { newComment } = body;
+        expect(newComment).toEqual(
+          expect.objectContaining({
+            body: 'Jenga is a fun family game',
+            author: 'mallionaire',
+            review_id: 2,
+            created_at: expect.any(String)
+          })  
+        )
+      })
+    })
 
+    it('responds with 404 if the review_id is valid but doesn\'t exist - not found', () => {
+      const review_id = 9999;
+      const newComment = {
+        username: 'mallionaire',
+        body: 'Jenga is a fun family game'
+      }
+      return request(app)
+      .post(`/api/reviews/${review_id}/comments`)
+      .send(newComment)
+      .expect(404)
+      .then(({ body }) => {
+        console.log(body);
+        //expect(body.msg).toBe('Path not found')
+      })
+    })
+
+    it('responds with 400 if passed a username that does not exist', () => {
+      const review_id = 2;
+      const newComment = {
+        username: 'not_existing_username',
+        body: 'bla bla bla'
+      }
+      return request(app)
+      .post(`/api/reviews/${review_id}/comments`)
+      .send(newComment)
+      .expect(400)
+      .then(({ body}) => {
+        expect(body.msg).toBe('Username does not exist')
       })
     })
   })

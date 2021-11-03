@@ -3,6 +3,7 @@ const {
   updateVotes,
   fetchAllReviews,
   fetchCommentsByReview,
+  addNewComment,
 } = require('../models/reviews.models.js');
 
 exports.getReviewsById = (req, res, next) => {
@@ -44,6 +45,17 @@ exports.getCommentsByReview = (req, res, next) => {
   fetchCommentsByReview(review_id)
   .then((comments) => {
     res.status(200).send({ comments })
+  })
+  .catch(next)
+}
+
+exports.addCommentByReview = (req, res, next) => {
+  const { review_id } = req.params;
+  const { username, body } = req.body;
+
+  addNewComment(review_id, username, body)
+  .then((newComment) => {
+    res.status(201).send({ newComment })
   })
   .catch(next)
 }

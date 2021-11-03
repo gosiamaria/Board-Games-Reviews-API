@@ -1,5 +1,5 @@
 const reviewsRouter = require("express").Router();
-const { getAllReviews, getReviewsById, updateReviewVotes, getCommentsByReview } = require("../controllers/reviews.controllers");
+const { getAllReviews, getReviewsById, updateReviewVotes, getCommentsByReview, addCommentByReview} = require("../controllers/reviews.controllers");
 
 reviewsRouter.route("/")
 .get(getAllReviews)
@@ -11,5 +11,6 @@ reviewsRouter.route("/:review_id")
 
 reviewsRouter.route("/:review_id/comments")
 .get(getCommentsByReview)
+.post(addCommentByReview)
 
 module.exports = reviewsRouter;

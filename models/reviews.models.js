@@ -1,4 +1,3 @@
-const { query } = require('../db/index.js');
 const db = require('../db/index.js');
 
 exports.fetchReviewsById = (review_id) => {
@@ -73,14 +72,37 @@ exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category) => 
 }
 
 exports.fetchCommentsByReview = (review_id) => {
-  return db.query(`
-  SELECT comment_id, votes, created_at, author, body FROM comments
-  WHERE review_id = $1;
-  `, [review_id])
+  const queryStr = `SELECT comments.comment_id, comments.votes, comments.created_at, comments.author, comments.body FROM comments
+  LEFT JOIN users ON comments.author = users.username
+  WHERE comments.review_id = $1;`;
+
+  const secondQueryStr = `SELECT * FROM reviews WHERE review_id = $1`;
+
+  const promise1 = db.query(queryStr, [review_id]);
+  const promise2 = db.query(secondQueryStr, [review_id]);
+
+  return Promise.all([promise1, promise2])
+  .then(([comments, reviews]) => {
+
+    if(comments.rows.length === 0) {
+      if (reviews.rows.length === 0) {
+        return Promise.reject({status:404, msg:'Review_id does not exist'});
+      } 
+      return comments.rows;
+    }
+    return comments.rows;
+  })
+}
+
+exports.addNewComment = (review_id, username, body) => {
+  return db
+  .query(`INSERT INTO comments (author, review_id, body) 
+    VALUES ($1, $2, $3) RETURNING *;`, [username, review_id, body])
   .then(({ rows }) => {
+    console.log(rows);
     if(rows.length === 0) {
       return Promise.reject({status:404, msg: 'Path not found'})
     }
-    return rows
+    return rows[0]
   })
 }
