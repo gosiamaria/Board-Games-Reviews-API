@@ -1,9 +1,10 @@
+const { query } = require('../db/index.js');
 const db = require('../db/index.js');
 
 exports.fetchReviewsById = (review_id) => {
   return db
   .query(`
-  SELECT reviews.*, COUNT(comment_id)::INT AS comment_count FROM reviews
+  SELECT reviews.*, COUNT(comments.comment_id)::INT AS comment_count FROM reviews
   LEFT JOIN comments ON comments.review_id = reviews.review_id 
   WHERE reviews.review_id = $1
   GROUP BY reviews.review_id;
@@ -48,25 +49,38 @@ exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category) => 
     return Promise.reject({status:400, msg: 'Invalid order query input'})
   } else {
 
-    let queryStr = `SELECT reviews.review_id, reviews.owner, reviews.title, reviews.votes, reviews.category, reviews.review_img_url, reviews.created_at, COUNT(comment_id)::INT AS comment_count FROM reviews
-    LEFT JOIN comments ON reviews.review_id = comments.review_id`;
+    let queryStr = `SELECT reviews.review_id, reviews.owner, reviews.title, reviews.votes, reviews.category, reviews.review_img_url, reviews.created_at, COUNT(comments.comment_id)::INT AS comment_count FROM reviews
+    LEFT JOIN comments ON comments.review_id = reviews.review_id`;
   
     const queryVal = [];
   
     if(category) {
       queryVal.push(category);
-      queryStr += ` WHERE reviews.category = $1"`;
-    } 
+      queryStr += ` WHERE reviews.category = $1`;
+    }
   
-    queryStr += ` 
-    GROUP BY reviews.review_id 
-    ORDER BY ${sort_by} ${order};`
-  
+    queryStr += ` GROUP BY reviews.review_id ORDER BY ${sort_by} ${order};`
+
     return db
     .query(queryStr, queryVal)
     .then(({ rows }) => {
+      if (rows.length === 0) {
+        return Promise.reject({ status: 404, msg: "No items found" });
+      }
       return rows;
     })
   }
 }
 
+exports.fetchCommentsByReview = (review_id) => {
+  return db.query(`
+  SELECT comment_id, votes, created_at, author, body FROM comments
+  WHERE review_id = $1;
+  `, [review_id])
+  .then(({ rows }) => {
+    if(rows.length === 0) {
+      return Promise.reject({status:404, msg: 'Path not found'})
+    }
+    return rows
+  })
+}

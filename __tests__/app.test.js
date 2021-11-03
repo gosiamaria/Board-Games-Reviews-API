@@ -8,12 +8,12 @@ beforeEach(() => seed(testData));
 afterAll(() => db.end());
 
 describe("app test", () => {
-	it("status:404, responds with message path not found", () => {
+	it("responds with 404, responds with message path not found", () => {
 		return request(app)
 		.get("/api/not_a_path")
 		.expect(404)
 		.then(({ body }) => {
-		expect(body.msg).toBe("path not found");
+		expect(body.msg).toBe("Path not found");
 		});
 	});
 });
@@ -84,7 +84,7 @@ describe('/api/reviews/:review_id', () => {
   })
 
   describe('PATCH', () => {
-    it('responds with status 200 and the updated review if the updated votes are incremented', () => {
+    it('responds with 200 and the updated review if the updated votes are incremented', () => {
       const review_id = 2;
       const votesUpdate = {
         inc_votes: 5
@@ -107,7 +107,8 @@ describe('/api/reviews/:review_id', () => {
         })
       })
     })
-    it('responds with status 200 and the updated review if the updated votes are decremented', () => {
+
+    it('responds with 200 and the updated review if the updated votes are decremented', () => {
       const review_id = 2;
       const votesUpdate = {
         inc_votes: -20
@@ -130,6 +131,7 @@ describe('/api/reviews/:review_id', () => {
         })
       })
     })
+
     it('responds with 404 if the review_id is valid but not found', () => {
       const review_id = 9999;
       const votesUpdate = {
@@ -211,7 +213,7 @@ describe('api/reviews', () => {
       })
     })
 
-    it('accepts a query sort_by which sorts the reviews by any valid column (defaults to date)', () => {
+    it('responds with 200 and accepts a query sort_by which sorts the reviews by any valid column (defaults to date)', () => {
       return request(app)
       .get('/api/reviews?sort_by=votes')
       .expect(200)
@@ -229,7 +231,7 @@ describe('api/reviews', () => {
       })
     })
 
-    it('responds with all reviews sorted by date by default', () => {
+    it('responds with 200 and all reviews sorted by date by default', () => {
       return request(app)
       .get('/api/reviews')
       .expect(200)
@@ -238,7 +240,7 @@ describe('api/reviews', () => {
       })
     })
 
-    it('accepts an order query which can be set to asc or desc for ascending or descending (defaults to descending)', () => {
+    it('responds with 200 and accepts an order query which can be set to asc or desc for ascending or descending (defaults to descending)', () => {
       return request(app)
       .get('/api/reviews?order=asc')
       .expect(200)
@@ -256,9 +258,28 @@ describe('api/reviews', () => {
       })
     })
 
-    it.skip('accepts a category query, which filters the reviews by the category value specified in the query', () => {
+    it('responds with 200 and accepts both queries: sort_by and order', () => {
       return request(app)
-      .get('/api/reviews?category=dexterity')
+      .get('/api/reviews?sort_by=votes&&order=asc')
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.reviews).toBeSortedBy('votes');
+      })
+    })
+
+    it('responds with 400 and if one of the two queries passed(sort_by or order) are invalid - bad request', () => {
+      return request(app)
+      .get('/api/reviews?sort_by=not_a_column&&order=asc')
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Invalid sort_by query input');
+      })
+    })
+
+    it('responds with 200 and accepts a category query, which filters the reviews by the category value specified in the query', () => {
+      const category = 'dexterity'
+      return request(app)
+      .get(`/api/reviews?category=${category}`)
       .expect(200)
       .then(({ body }) => {
         const { reviews } = body;
@@ -267,16 +288,99 @@ describe('api/reviews', () => {
         })
       })
     })
+
+    it('responds with 404 if the category passed is valid but doesn\'t exist', () => {
+      const category = 'non_existent_category'
+      return request(app)
+      .get(`/api/reviews?category=${category}`)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe('No items found')
+      })
+    })
+  })
+})
+
+describe('api.reviews/:review_id/comments', () => {
+  describe('GET', () => {
+    it('responds with 200 and returns an array of comments for the given review_id with following properties for each comment:comment_id, votes, created_at, author, body', () => {
+      const review_id = 3;
+      return request(app)
+      .get(`/api/reviews/${review_id}/comments`)
+      .expect(200)
+      .then(({ body }) => {
+        const { comments } = body;
+        comments.forEach((comment) => {
+          expect(comment).toEqual(
+            expect.objectContaining({
+              comment_id: expect.any(Number),
+              votes: expect.any(Number),
+              created_at: expect.any(String),
+              author: expect.any(String),
+              body: expect.any(String)
+            })
+          )
+        })
+        expect(comments[0]).toEqual({
+          comment_id: 2,
+          votes: 13,
+          created_at: "2021-01-18T10:09:05.410Z",
+          author: 'mallionaire',
+          body: 'My dog loved this game too!',
+        })
+      })
+    })
+    
+    it('responds with 404 if review_id is valid but not found', () => {
+      const review_id = 9999;
+      return request(app)
+      .get(`/api/reviews/${review_id}/comments`)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Path not found')
+      })
+    })
+
+    it('responds with 400 if review_id is invalid type - bad request', () => {
+      const review_id = 'not_an_id';
+      return request(app)
+      .get(`/api/reviews/${review_id}/comments`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request')
+      })
+    })
+
+    it('responds with 404 if given an invlid endpoint(ie. typo in \'comments\'', () => {
+      const review_id = 3;
+      return request(app)
+      .get(`/api/reviews/${review_id}/not_comments`)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Path not found')
+      })
+    })
+  })
+
+  describe.skip('POST', () => {
+    it('responds with 201 and the posted comment', () => {
+      const review_id = 3;
+      return request(app)
+      .post(`/api/reviews/${review_id}/comments`)
+      .expect(201)
+      .then(({ body }) => {
+
+      })
+    })
   })
 })
 
 
-
-// GET /api/categories ✔ 
-// GET /api/reviews/:review_id ✔ 
-// PATCH /api/reviews/:review_id ✔
-// GET /api/reviews 
-// GET /api/reviews/:review_id/comments
+// GET /api/categories    ✔ 
+// GET /api/reviews/:review_id    ✔ 
+// PATCH /api/reviews/:review_id    ✔
+// GET /api/reviews   ✔
+// GET /api/reviews/:review_id/comments   ✔
 // POST /api/reviews/:review_id/comments
 // DELETE /api/comments/:comment_id
 // GET /api
