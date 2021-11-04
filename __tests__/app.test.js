@@ -351,15 +351,15 @@ describe('api.reviews/:review_id/comments', () => {
       })
     })
 
-    // it('responds with 400 if review_id is invalid type - bad request', () => {
-    //   const review_id = 'not_an_id';
-    //   return request(app)
-    //   .get(`/api/reviews/${review_id}/comments`)
-    //   .expect(400)
-    //   .then(({ body }) => {
-    //     expect(body.msg).toBe('Bad request')
-    //   })
-    // })
+    it('responds with 400 if review_id is invalid type - bad request', () => {
+      const review_id = 'not_an_id';
+      return request(app)
+      .get(`/api/reviews/${review_id}/comments`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request')
+      })
+    })
 
     it('responds with 404 if given an invalid endpoint(ie. typo in \'comments\'', () => {
       const review_id = 3;
@@ -372,7 +372,7 @@ describe('api.reviews/:review_id/comments', () => {
     })
   })
 
-  describe.skip('POST', () => {
+  describe('POST', () => {
     it('responds with 201 and the posted comment', () => {
       const review_id = 2;
       const newComment = {
@@ -387,16 +387,18 @@ describe('api.reviews/:review_id/comments', () => {
         const { newComment } = body;
         expect(newComment).toEqual(
           expect.objectContaining({
-            body: 'Jenga is a fun family game',
-            author: 'mallionaire',
-            review_id: 2,
-            created_at: expect.any(String)
+            author: "mallionaire", 
+            body: "Jenga is a fun family game", 
+            comment_id: expect.any(Number), 
+            created_at: expect.any(String), 
+            review_id: 2, 
+            votes: expect.any(Number)
           })  
         )
       })
     })
 
-    it('responds with 404 if the review_id is valid but doesn\'t exist - not found', () => {
+    it.only('responds with 404 if the review_id is valid but doesn\'t exist - not found', () => {
       const review_id = 9999;
       const newComment = {
         username: 'mallionaire',
@@ -408,7 +410,7 @@ describe('api.reviews/:review_id/comments', () => {
       .expect(404)
       .then(({ body }) => {
         console.log(body);
-        //expect(body.msg).toBe('Path not found')
+        expect(body.msg).toBe('Review_id does not exist')
       })
     })
 

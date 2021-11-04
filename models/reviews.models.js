@@ -95,14 +95,30 @@ exports.fetchCommentsByReview = (review_id) => {
 }
 
 exports.addNewComment = (review_id, username, body) => {
-  return db
-  .query(`INSERT INTO comments (author, review_id, body) 
-    VALUES ($1, $2, $3) RETURNING *;`, [username, review_id, body])
-  .then(({ rows }) => {
-    console.log(rows);
-    if(rows.length === 0) {
-      return Promise.reject({status:404, msg: 'Path not found'})
-    }
-    return rows[0]
-  })
+  if(username === undefined || body === undefined) {
+    return Promise.reject({status:400, msg: 'Invalid request'})
+  } else if (username === null || body === null) {
+    return Promise.reject({status: 400, msg: 'Username or body cannot be null'})
+  } else {
+    const queryStr1 = `INSERT INTO comments (author, review_id, body) 
+    VALUES ($1, $2, $3) RETURNING *;`;
+    const queryStr2 = `SELECT * FROM reviews WHERE review_id = $1;`;
+    const queryStr3 = `SELECT * FROM users WHERE username = $1;`
+
+    const promise1 = db.query(queryStr1, [username, review_id, body]);
+    const promise2 = db.query(queryStr2, [review_id]);
+    const promise3 = db.query(queryStr3, [username]);
+
+    return Promise.all([promise1, promise2, promise3])
+    .then(([comments, reviews, users]) => {
+
+      if(comments.rows.length === 0) {
+        if(reviews.rows.length === 0) {
+          return Promise.reject({status:404, msg:'Review_id does not exist'});
+        }
+        console.log(comments.rows)
+      }
+      return comments.rows[0]
+    })
+  }
 }
