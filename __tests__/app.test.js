@@ -3,6 +3,7 @@ const testData = require('../db/data/test-data/index.js');
 const seed = require('../db/seeds/seed.js');
 const app = require("../app.js");
 const request = require("supertest");
+const { checkIfExists } = require('../utils.js');
 
 beforeEach(() => seed(testData));
 afterAll(() => db.end());
@@ -68,7 +69,7 @@ describe('/api/reviews/:review_id', () => {
       .get(`/api/reviews/${review_id}`)
       .expect(400)
       .then(({ body }) => {
-        expect(body.msg).toBe('Bad request');
+        expect(body.msg).toBe('Bad request - invalid data type');
       })
     })
 
@@ -156,7 +157,7 @@ describe('/api/reviews/:review_id', () => {
       .send(votesUpdate)
       .expect(400)
       .then(({ body }) => {
-        expect(body.msg).toBe('Bad request')
+        expect(body.msg).toBe('Bad request - invalid data type')
       })
     })
 
@@ -170,7 +171,7 @@ describe('/api/reviews/:review_id', () => {
       .send(votesUpdate)
       .expect(400)
       .then(({ body }) => {
-        expect(body.msg).toBe('Bad request')
+        expect(body.msg).toBe('Bad request - invalid data type')
       })
     })
 
@@ -182,13 +183,13 @@ describe('/api/reviews/:review_id', () => {
       .send(votesUpdate)
       .expect(400)
       .then(({ body }) => {
-        expect(body.msg).toBe('Bad request')
+        expect(body.msg).toBe('Bad request - cannot pass an empty object')
       })
     })
   })
 })
 
-describe('api/reviews', () => {
+describe('/api/reviews', () => {
   describe('GET', () => {
     it('responds with 200 and returns all reviews with following columns: review_id, owner, title, votes, category, review_img_url, created_at, comment_count', () => {
       return request(app)
@@ -301,7 +302,7 @@ describe('api/reviews', () => {
   })
 })
 
-describe('api.reviews/:review_id/comments', () => {
+describe('/api.reviews/:review_id/comments', () => {
   describe('GET', () => {
     it('responds with 200 and returns an array of comments for the given review_id with following properties for each comment:comment_id, votes, created_at, author, body', () => {
       const review_id = 3;
@@ -357,7 +358,7 @@ describe('api.reviews/:review_id/comments', () => {
       .get(`/api/reviews/${review_id}/comments`)
       .expect(400)
       .then(({ body }) => {
-        expect(body.msg).toBe('Bad request')
+        expect(body.msg).toBe('Bad request - invalid data type')
       })
     })
 
@@ -439,7 +440,7 @@ describe('api.reviews/:review_id/comments', () => {
       .send(newComment)
       .expect(400)
       .then(({ body}) => {
-        expect(body.msg).toBe(`Bad request`)
+        expect(body.msg).toBe('Bad request - invalid data type')
       })
     })
 
@@ -484,12 +485,45 @@ describe('api.reviews/:review_id/comments', () => {
   })
 })
 
+describe('/api/comments/:comment_id', () => {
+  describe('DELETE', () => {
+    it('responds with 204, deletes the comment by comment_id and outputs no content', () => {
+      const comment_id = 1;
+      return request(app)
+      .delete(`/api/comments/${comment_id}`)
+      .expect(204)
+      .then(() => {
+        expect(checkIfExists("comments", "comment_id", comment_id)).rejects.toEqual({msg: `${comment_id} not found`, status: 404}); 
+      })
+    })
+
+    it('responds with 404 if passed with a (valid) comment_id that does not exist', () => {
+      const comment_id2 = 9999;
+      return request(app)
+      .delete(`/api/comments/${comment_id2}`)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe(`${comment_id2} not found`)
+      })
+    })
+
+    it('responds with 400 if passed with an invalid comment_id type ie.string', () => {
+      const comment_id = 'not_a_number';
+      return request(app)
+      .delete(`/api/comments/${comment_id}`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request - invalid data type')
+      })
+    })
+  })
+})
 
 // GET /api/categories    ✔ 
 // GET /api/reviews/:review_id    ✔ 
 // PATCH /api/reviews/:review_id    ✔
 // GET /api/reviews   ✔
 // GET /api/reviews/:review_id/comments   ✔
-// POST /api/reviews/:review_id/comments
+// POST /api/reviews/:review_id/comments  ✔
 // DELETE /api/comments/:comment_id
 // GET //api

@@ -20,7 +20,7 @@ exports.fetchReviewsById = (review_id) => {
 
 exports.updateVotes = (review_id, inc_votes) => {
   if(inc_votes === undefined) {
-    return Promise.reject({status: 400, msg: 'Bad request'})
+    return Promise.reject({status: 400, msg: 'Bad request - cannot pass an empty object'})
   };
   return db
   .query(`
