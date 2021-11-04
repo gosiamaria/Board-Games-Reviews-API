@@ -398,7 +398,7 @@ describe('api.reviews/:review_id/comments', () => {
       })
     })
 
-    it.only('responds with 404 if the review_id is valid but doesn\'t exist - not found', () => {
+    it('responds with 404 if the review_id is valid but doesn\'t exist - not found', () => {
       const review_id = 9999;
       const newComment = {
         username: 'mallionaire',
@@ -409,12 +409,11 @@ describe('api.reviews/:review_id/comments', () => {
       .send(newComment)
       .expect(404)
       .then(({ body }) => {
-        console.log(body);
-        expect(body.msg).toBe('Review_id does not exist')
+        expect(body.msg).toBe(`${review_id} not found`)
       })
     })
 
-    it('responds with 400 if passed a username that does not exist', () => {
+    it('responds with 404 if passed a username that does not exist', () => {
       const review_id = 2;
       const newComment = {
         username: 'not_existing_username',
@@ -423,9 +422,63 @@ describe('api.reviews/:review_id/comments', () => {
       return request(app)
       .post(`/api/reviews/${review_id}/comments`)
       .send(newComment)
+      .expect(404)
+      .then(({ body}) => {
+        expect(body.msg).toBe(`not_existing_username not found`)
+      })
+    })
+
+    it('reponds with 400 if passed review_id is invalid(not a number)', () => {
+      const review_id = 'not_a_number';
+      const newComment = {
+        username: 'mallionaire',
+        body: 'Jenga is a fun family game'
+      }
+      return request(app)
+      .post(`/api/reviews/${review_id}/comments`)
+      .send(newComment)
       .expect(400)
       .then(({ body}) => {
-        expect(body.msg).toBe('Username does not exist')
+        expect(body.msg).toBe(`Bad request`)
+      })
+    })
+
+    it('responds with 400 if passed with empty body object', () => {
+      const review_id = 2;
+      const newComment = {}
+      return request(app)
+      .post(`/api/reviews/${review_id}/comments`)
+      .send(newComment)
+      .expect(400)
+      .then(({ body}) => {
+        expect(body.msg).toBe("Invalid request body")
+      })
+    })
+
+    it('responds with 400 if passed with a wrong request body ie.too few/too many columns', () => {
+      const review_id = 2;
+      const newComment = {username: 'mallionaire'}
+      return request(app)
+      .post(`/api/reviews/${review_id}/comments`)
+      .send(newComment)
+      .expect(400)
+      .then(({ body}) => {
+        expect(body.msg).toBe("Invalid request body")
+      })
+    })
+
+    it('responds with 400 if passed the right amount of columns but wrong names', () => {
+      const review_id = 2;
+      const newComment = {
+        not_a_column_name: 'mallionaire',
+        not_a_column_name_either: 'Jenga is a fun family game'
+      }
+      return request(app)
+      .post(`/api/reviews/${review_id}/comments`)
+      .send(newComment)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid request body")
       })
     })
   })
@@ -439,4 +492,4 @@ describe('api.reviews/:review_id/comments', () => {
 // GET /api/reviews/:review_id/comments   ✔
 // POST /api/reviews/:review_id/comments
 // DELETE /api/comments/:comment_id
-// GET /api
+// GET //api

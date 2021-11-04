@@ -44,3 +44,12 @@ exports.categoryFilter = (category) => {
         return category;
     }
 }
+
+exports.checkIfExists = async (table, column, value) => {
+    const { rows } = await db.query(
+        `SELECT * FROM ${table} WHERE ${column} = $1;`, [value]  
+    )
+    if(rows.length === 0) {
+        return Promise.reject({status:404, msg: `${value} not found`})
+    }
+}
