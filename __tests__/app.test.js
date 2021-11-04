@@ -4,6 +4,7 @@ const seed = require('../db/seeds/seed.js');
 const app = require("../app.js");
 const request = require("supertest");
 const { checkIfExists } = require('../utils.js');
+const endpoints = require("../endpoints.json");
 
 beforeEach(() => seed(testData));
 afterAll(() => db.end());
@@ -519,11 +520,17 @@ describe('/api/comments/:comment_id', () => {
   })
 })
 
-// GET /api/categories    ✔ 
-// GET /api/reviews/:review_id    ✔ 
-// PATCH /api/reviews/:review_id    ✔
-// GET /api/reviews   ✔
-// GET /api/reviews/:review_id/comments   ✔
-// POST /api/reviews/:review_id/comments  ✔
-// DELETE /api/comments/:comment_id
-// GET //api
+describe('/api', () => {
+  describe('GET', () => {
+    it('responds with 200 and JSON describing all the available endpoints on the API', () => {
+      return request(app)
+      .get("/api")
+      .expect(200)
+      .then(({ body }) => {
+        console.log(body);
+
+        expect(body.endpoints).toEqual(endpoints);
+      });
+    })
+  })
+})
