@@ -1,5 +1,17 @@
 const db = require('./db/index.js');
 
+exports.checkIfExists = (table, column, value) => {
+    return db.query(
+        `SELECT * FROM ${table} WHERE ${column} = $1;`, [value]
+    )
+    .then(({ rows }) => {
+        if(rows.length === 0) {
+            return Promise.reject({status:404, msg: `${value} not found`})
+        }
+        return `The value ${value} exists`;
+    })
+}
+
 exports.createReferenceObj = (arr, param1, param2) => {
 	const newObject = {};
 	arr.forEach((object) => (newObject[object[param1]] = object[param2]));
@@ -45,11 +57,3 @@ exports.categoryFilter = (category) => {
     }
 }
 
-exports.checkIfExists = async (table, column, value) => {
-    const { rows } = await db.query(
-        `SELECT * FROM ${table} WHERE ${column} = $1;`, [value]  
-    )
-    if(rows.length === 0) {
-        return Promise.reject({status:404, msg: `${value} not found`})
-    }
-}
