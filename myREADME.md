@@ -16,7 +16,13 @@ This document provides a summary of the project as well as guidelines and exampl
 
 The intention of this project was to mimic the building of a real world backend service (such as reddit) which should provide this information to the front end architecture.
 
-It demonstrates the knowledge on:
+This API is written using:
+- `Node.js`
+- `PostgreSQL` to create the database
+- `jest`, `jest-sorted` and `supertest` for testing purposes
+
+
+It aims to demonstrate the knowledge on:
 
 - `Callback functions`,
 - `RESTful endpoints`,
@@ -25,12 +31,6 @@ It demonstrates the knowledge on:
 - `Advanced error handling`,
 - `Seeding`,
 - `Complex queries`.
-
-This API is written using:
-- `Node.js`
-- `PostgreSQL` to create the database
-- `jest`, `jest-sorted` and `supertest` for testing purposes
-
 
 ---
 ## MINIMUM SETUP REQUIREMENTS
@@ -44,7 +44,7 @@ Please make sure you have the following installed in order to use this API:
 ## SETUP INSTRUCTIONS
 
 
-1. **`Clone this repo`** - Paste the below command into your terminal (in the directory of your choosing) to clone this repo:
+1. **`Clone this repo`** - Paste the below command into your terminal (in the directory of your choosing):
     
         git clone https://github.com/gosiamaria/Northcoders-be-games.git
 
