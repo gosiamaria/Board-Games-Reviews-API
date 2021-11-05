@@ -300,6 +300,26 @@ describe('/api/reviews', () => {
         expect(body.msg).toBe('No items found')
       })
     })
+
+    it('responds with 200 and accepts the limit query', () => {
+      const limit = 5;
+      return request(app)
+      .get(`/api/reviews?limit=${limit}`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.reviews.length).toBe(5);
+      })
+    })
+
+    it('responds with 400 if passed with an invalid limit query ie. not a number', () => {
+      const limit = 'not_a_number';
+      return request(app)
+      .get(`/api/reviews?limit=${limit}`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request - invalid data type');
+      })
+    })
   })
 })
 

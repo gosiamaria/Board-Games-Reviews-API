@@ -29,9 +29,9 @@ exports.updateReviewVotes = (req, res, next) => {
 
 exports.getAllReviews = (req, res, next) => {
 
-  const { sort_by, order, category } = req.query;
+  const { sort_by, order, category, limit } = req.query;
 
-  fetchAllReviews(sort_by, order, category)
+  fetchAllReviews(sort_by, order, category, limit)
   .then((reviews) => {
     res.status(200).send({ reviews })
   })

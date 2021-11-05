@@ -37,7 +37,7 @@ exports.updateVotes = (review_id, inc_votes) => {
   })
 }
 
-exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category) => {
+exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category, limit = 15) => {
   const sortColumns = ['votes', 'created_at', 'title', 'designer', 'owner', 'category'];
 	const orderWays = ['ASC', 'DESC', 'asc', 'desc'];
 
@@ -59,7 +59,7 @@ exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category) => 
       queryStr += ` WHERE reviews.category = $1`;
     }
   
-    queryStr += ` GROUP BY reviews.review_id ORDER BY ${sort_by} ${order};`
+    queryStr += ` GROUP BY reviews.review_id ORDER BY ${sort_by} ${order} LIMIT ${limit};`
 
     return db
     .query(queryStr, queryVal)
