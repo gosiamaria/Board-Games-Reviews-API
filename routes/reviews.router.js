@@ -8,10 +8,12 @@ reviewsRouter.route("/")
 reviewsRouter.route("/:review_id")
 .get(getReviewsById)
 .patch(updateReviewVotes)
+.all((req, res) => { res.status(405).send({msg:'Method not allowed'})})
 
 reviewsRouter.route("/:review_id/comments")
 .get(getCommentsByReview)
 .post(addCommentByReview)
+.all((req, res) => { res.status(405).send({msg:'Method not allowed'})})
 
 module.exports = reviewsRouter;
 

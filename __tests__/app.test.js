@@ -518,6 +518,104 @@ describe('/api/comments/:comment_id', () => {
       })
     })
   })
+
+  describe('PATCH', () => {
+    it('responds with 200 and the updated comment if the updated votes are incremented', () => {
+      const comment_id = 1;
+      const votesUpdate = {
+        inc_votes: 5
+      }
+      return request(app)
+      .patch(`/api/comments/${comment_id}`)
+      .send(votesUpdate)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comment).toEqual({
+          comment_id: 1,
+          body: 'I loved this game too!',
+          votes: 21,
+          author: 'bainesface',
+          review_id: 2,
+          created_at: '2017-11-22T12:43:33.389Z'
+        })
+      })
+    })
+
+    it('responds with 200 and the updated review if the updated votes are decremented', () => {
+      const comment_id = 1;
+      const votesUpdate = {
+        inc_votes: -5
+      }
+      return request(app)
+      .patch(`/api/comments/${comment_id}`)
+      .send(votesUpdate)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comment).toEqual({
+          comment_id: 1,
+          body: 'I loved this game too!',
+          votes: 11,
+          author: 'bainesface',
+          review_id: 2,
+          created_at: '2017-11-22T12:43:33.389Z'
+        })
+      })
+    })
+
+    it('responds with 404 if the comment_id is valid but not found', () => {
+      const comment_id = 9999;
+      const votesUpdate = {
+        inc_votes: 5
+      }
+      return request(app)
+      .patch(`/api/comments/${comment_id}`)
+      .send(votesUpdate)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Path not found')
+      })
+    })
+
+    it('responds with 400 if the review_id is invalid -bad request', () => {
+      const comment_id = 'not_a_number';
+      const votesUpdate = {
+        inc_votes: 5
+      }
+      return request(app)
+      .patch(`/api/comments/${comment_id}`)
+      .send(votesUpdate)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request - invalid data type')
+      })
+    })
+
+    it('responds with 400 when passed with an invalid inc_vote -bad request', () => {
+      const comment_id = 1;
+      const votesUpdate = {
+        inc_votes: 'not_a_number'
+      }
+      return request(app)
+      .patch(`/api/comments/${comment_id}`)
+      .send(votesUpdate)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request - invalid data type')
+      })
+    })
+
+    it('responds with 400 if passed with no inc_vote', () => {
+      const comment_id = 1;
+      const votesUpdate = {};
+      return request(app)
+      .patch(`/api/comments/${comment_id}`)
+      .send(votesUpdate)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request - cannot pass an empty object')
+      })
+    })
+  })
 })
 
 describe('/api', () => {
@@ -532,3 +630,60 @@ describe('/api', () => {
     })
   })
 })
+
+describe('/api/users', () => {
+  describe('GET', () => {
+    it('Responds with 200 and returns an array of user objects, each containing the property username', () => {
+      return request(app)
+      .get("/api/users")
+      .expect(200)
+      .then(({ body }) => {
+        const { users } = body;
+        users.forEach((user) => {
+          expect(user).toEqual(
+            expect.objectContaining({
+              username: expect.any(String),
+            })
+          )
+        })
+        expect(users[0]).toEqual({username: 'mallionaire'})
+      })
+    })
+  })
+})
+
+describe('/api/users/:username', () => {
+  describe('GET', () => {
+    it('responds with 200 and returns a user object with username, avatar_url and name', () => {
+      const username = 'dav3rid';
+      return request(app)
+      .get(`/api/users/${username}`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.user).toEqual({
+          username: 'dav3rid',
+          name: 'dave',
+          avatar_url:
+            'https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png'
+        })
+      })
+    })
+
+    it('responds with 404 if the username is not found (doesn\'t exist', () => {
+      const username = 'non_existing_username';
+      return request(app)
+      .get(`/api/users/${username}`)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Path not found')
+      })
+    })
+  })
+})
+
+
+
+// GET /api/users  ✅ 
+// GET /api/users/:username ✅ 
+// PATCH /api/comments/:comment_id
+
