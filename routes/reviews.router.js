@@ -1,19 +1,21 @@
 const reviewsRouter = require("express").Router();
-const { getAllReviews, getReviewsById, updateReviewVotes, getCommentsByReview, addCommentByReview} = require("../controllers/reviews.controllers");
+const { getAllReviews, getReviewsById, updateReviewVotes } = require("../controllers/reviews.controllers");
+const { getCommentsByReview, addCommentByReview } = require("../controllers/comments.controllers.js");
+const { handleNotAllowedMethods } = require('../controllers/errors.controllers');
 
 reviewsRouter.route("/")
 .get(getAllReviews)
-.all((req, res) => { res.status(405).send({msg:'Method not allowed'})})
+.all(handleNotAllowedMethods)
 
 reviewsRouter.route("/:review_id")
 .get(getReviewsById)
 .patch(updateReviewVotes)
-.all((req, res) => { res.status(405).send({msg:'Method not allowed'})})
+.all(handleNotAllowedMethods)
 
 reviewsRouter.route("/:review_id/comments")
 .get(getCommentsByReview)
 .post(addCommentByReview)
-.all((req, res) => { res.status(405).send({msg:'Method not allowed'})})
+.all(handleNotAllowedMethods)
 
 module.exports = reviewsRouter;
 

@@ -8,6 +8,9 @@ exports.fetchUsers = () => {
 }
 
 exports.fetchUserByUsername = (username) => {
+
+    console.log(typeof username === 'number');
+
     return db.query(`SELECT * FROM users WHERE username = $1;`, [username])
     .then(({ rows }) => {
         if(rows.length === 0) {

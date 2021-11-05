@@ -3,7 +3,8 @@ const apiRouter = require("./routes/api.router.js");
 const {
     handleCustomErrors,
     handlePsqlErrors,
-    handle500
+    handle500,
+    handleNotAllowedMethods
 } = require("./controllers/errors.controllers")
 
 
@@ -16,6 +17,7 @@ app.all("/*", (req, res) => {
     res.status(404).send({ msg: "Path not found" });
 });
 
+app.use(handleNotAllowedMethods);
 app.use(handleCustomErrors);
 app.use(handlePsqlErrors);
 app.use(handle500);

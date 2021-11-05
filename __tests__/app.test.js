@@ -27,14 +27,15 @@ describe('/api/categories', () => {
       .get("/api/categories")
       .expect(200)
       .then(({ body }) => {
-        body.categories.forEach((category) => {
-          expect(category).toEqual(
-            expect.objectContaining({
-            slug: expect.any(String),
-            description: expect.any(String)
-            })
-          ) 
-        })
+        expect(body.categories.length > 0).toBe(true);
+          body.categories.forEach((category) => {
+            expect(category).toEqual(
+              expect.objectContaining({
+              slug: expect.any(String),
+              description: expect.any(String)
+              })
+            ) 
+          })
       })
     })
   })
@@ -176,15 +177,25 @@ describe('/api/reviews/:review_id', () => {
       })
     })
 
-    it('responds with 400 if passed with no inc_vote', () => {
+    it('responds with 200 if passed with no inc_vote and returns unchanged review', () => {
       const review_id = 2;
       const votesUpdate = {};
       return request(app)
       .patch(`/api/reviews/${review_id}`)
       .send(votesUpdate)
-      .expect(400)
+      .expect(200)
       .then(({ body }) => {
-        expect(body.msg).toBe('Bad request - cannot pass an empty object')
+        expect(body.review).toEqual({
+          review_id: 2,
+          title: 'Jenga',
+          review_body: 'Fiddly fun for all the family',
+          designer: 'Leslie Scott',
+          review_img_url: 'https://www.golenbock.com/wp-content/uploads/2015/01/placeholder-user.png',
+          votes: 5,
+          category: 'dexterity',
+          owner: 'philippaclaire9',
+          created_at: '2021-01-18T10:01:41.251Z'
+        })
       })
     })
   })
@@ -198,6 +209,7 @@ describe('/api/reviews', () => {
       .expect(200)
       .then(({ body }) => {
         const { reviews } = body;
+        expect(reviews.length > 0).toBe(true);
         reviews.forEach((review) => {
           expect(review).toEqual(
             expect.objectContaining({
@@ -291,13 +303,32 @@ describe('/api/reviews', () => {
       })
     })
 
-    it('responds with 404 if the category passed is valid but doesn\'t exist', () => {
+    it('responds with 404 if the category passed doesn\'t exist', () => {
       const category = 'non_existent_category'
       return request(app)
       .get(`/api/reviews?category=${category}`)
       .expect(404)
       .then(({ body }) => {
-        expect(body.msg).toBe('No items found')
+        expect(body.msg).toBe('non_existent_category not found')
+      })
+    })
+
+    it('responds with 200 and an empty array if passed with a category that does exist but has no reviews', () => {
+      const category = "children's games";
+      return request(app)
+      .get(`/api/reviews?category=${category}`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.reviews).toEqual([]);
+      })
+    })
+
+    it('responds with 200 and an array of up to 10 reviews by dafault', () => {
+      return request(app)
+      .get(`/api/reviews`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.reviews).toHaveLength(10);
       })
     })
 
@@ -307,7 +338,7 @@ describe('/api/reviews', () => {
       .get(`/api/reviews?limit=${limit}`)
       .expect(200)
       .then(({ body }) => {
-        expect(body.reviews.length).toBe(5);
+        expect(body.reviews).toHaveLength(5);
       })
     })
 
@@ -318,6 +349,24 @@ describe('/api/reviews', () => {
       .expect(400)
       .then(({ body }) => {
         expect(body.msg).toBe('Bad request - invalid data type');
+      })
+    })
+
+    it('responds with 200 and accepts a "p" query returning reviews for that page', () => {
+      return request(app)
+      .get(`/api/reviews?p=2`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.reviews).toHaveLength(3);
+      })
+    })
+
+    it('responds with 200 and accepts both "p" and "limit" queries returning reviews for that page', () => {
+      return request(app)
+      .get(`/api/reviews?p=2&&limit=4`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.reviews).toHaveLength(4);
       })
     })
   })
@@ -332,6 +381,7 @@ describe('/api.reviews/:review_id/comments', () => {
       .expect(200)
       .then(({ body }) => {
         const { comments } = body;
+        expect(comments.length > 0).toBe(true);
         comments.forEach((comment) => {
           expect(comment).toEqual(
             expect.objectContaining({
@@ -406,14 +456,13 @@ describe('/api.reviews/:review_id/comments', () => {
       .send(newComment)
       .expect(201)
       .then(({ body }) => {
-        const { newComment } = body;
-        expect(newComment).toEqual(
+        const { comment } = body;
+        expect(comment).toEqual(
           expect.objectContaining({
             author: "mallionaire", 
             body: "Jenga is a fun family game", 
             comment_id: expect.any(Number), 
             created_at: expect.any(String), 
-            review_id: 2, 
             votes: expect.any(Number)
           })  
         )
@@ -501,6 +550,32 @@ describe('/api.reviews/:review_id/comments', () => {
       .expect(400)
       .then(({ body }) => {
         expect(body.msg).toBe("Invalid request body")
+      })
+    })
+
+    it('responds with 201 and the posted comment ignoring any unneccessary properties', () => {
+      const review_id = 2;
+      const newComment = {
+        username: 'mallionaire',
+        body: 'Jenga is a fun family game',
+        colour: 'violet',
+        votes: 5
+      }
+      return request(app)
+      .post(`/api/reviews/${review_id}/comments`)
+      .send(newComment)
+      .expect(201)
+      .then(({ body }) => {
+        const { comment } = body;
+        expect(comment).toEqual(
+          expect.objectContaining({
+            author: "mallionaire", 
+            body: "Jenga is a fun family game", 
+            comment_id: expect.any(Number), 
+            created_at: expect.any(String), 
+            votes: expect.any(Number)
+          })  
+        )
       })
     })
   })
@@ -624,15 +699,22 @@ describe('/api/comments/:comment_id', () => {
       })
     })
 
-    it('responds with 400 if passed with no inc_vote', () => {
+    it('responds with 200 if passed with no inc_vote and returns an unchanged comment', () => {
       const comment_id = 1;
       const votesUpdate = {};
       return request(app)
       .patch(`/api/comments/${comment_id}`)
       .send(votesUpdate)
-      .expect(400)
+      .expect(200)
       .then(({ body }) => {
-        expect(body.msg).toBe('Bad request - cannot pass an empty object')
+        expect(body.comment).toEqual({
+          comment_id: 1,
+          body: 'I loved this game too!',
+          votes: 16,
+          author: 'bainesface',
+          review_id: 2,
+          created_at: '2017-11-22T12:43:33.389Z'
+        })
       })
     })
   })
@@ -659,6 +741,7 @@ describe('/api/users', () => {
       .expect(200)
       .then(({ body }) => {
         const { users } = body;
+        expect(users.length > 0).toBe(true);
         users.forEach((user) => {
           expect(user).toEqual(
             expect.objectContaining({
@@ -698,6 +781,16 @@ describe('/api/users/:username', () => {
         expect(body.msg).toBe('Path not found')
       })
     })
+
+    // it('responds with 400 if passed with an invalid username data type ie. not a string', () => {
+    //   const username = 999;
+    //   return request(app)
+    //   .get(`/api/users/${username}`)
+    //   .expect(400)
+    //   .then(({ body }) => {
+    //     expect(body.msg).toBe('Bad request')
+    //   })
+    // })
   })
 })
 

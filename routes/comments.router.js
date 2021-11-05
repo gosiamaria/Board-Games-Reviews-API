@@ -1,9 +1,10 @@
 const commentsRouter = require("express").Router();
 const { deleteComment, updateCommentVotes } = require("../controllers/comments.controllers");
+const { handleNotAllowedMethods } = require('../controllers/errors.controllers');
 
 commentsRouter.route("/:comment_id")
 .delete(deleteComment)
 .patch(updateCommentVotes)
-.all((req, res) => { res.status(405).send({msg:'Method not allowed'})})
+.all(handleNotAllowedMethods)
 
 module.exports = commentsRouter;

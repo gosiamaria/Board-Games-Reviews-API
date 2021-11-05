@@ -12,6 +12,14 @@ exports.checkIfExists = (table, column, value) => {
     })
 }
 
+exports.dropTablesIfExist = async (tableName1, tableName2, tableName3, tableName4) => {
+    await db.query(`DROP TABLE IF EXISTS ${tableName1};`);
+    await db.query(`DROP TABLE IF EXISTS ${tableName2};`);
+    await db.query(`DROP TABLE IF EXISTS ${tableName3};`);
+    await db.query(`DROP TABLE IF EXISTS ${tableName4};`);
+}
+
+
 exports.createReferenceObj = (arr, param1, param2) => {
 	const newObject = {};
 	arr.forEach((object) => (newObject[object[param1]] = object[param2]));

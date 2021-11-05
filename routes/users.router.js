@@ -1,12 +1,13 @@
 const usersRouter = require("express").Router();
 const { getUsers, getUserByUsername } = require("../controllers/users.controllers");
+const { handleNotAllowedMethods } = require('../controllers/errors.controllers');
 
 usersRouter.route("/")
 .get(getUsers)
-.all((req, res) => { res.status(405).send({msg:'Method not allowed'})})
+.all(handleNotAllowedMethods)
 
 usersRouter.route("/:username")
 .get(getUserByUsername)
-.all((req, res) => { res.status(405).send({msg:'Method not allowed'})})
+.all(handleNotAllowedMethods)
 
 module.exports = usersRouter;

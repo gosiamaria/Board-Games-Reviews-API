@@ -1,5 +1,5 @@
 const db = require('../db/index.js');
-const { checkIfExists } = require("../utils.js");
+const { checkIfExists } = require("../utils.js")
 
 exports.fetchReviewsById = (review_id) => {
   return db
@@ -18,10 +18,7 @@ exports.fetchReviewsById = (review_id) => {
   })
 }
 
-exports.updateVotes = (review_id, inc_votes) => {
-  if(inc_votes === undefined) {
-    return Promise.reject({status: 400, msg: 'Bad request - cannot pass an empty object'})
-  };
+exports.updateVotes = (review_id, inc_votes = 0) => {
   return db
   .query(`
   UPDATE reviews
@@ -37,86 +34,37 @@ exports.updateVotes = (review_id, inc_votes) => {
   })
 }
 
-exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category, limit = 15) => {
-  const sortColumns = ['votes', 'created_at', 'title', 'designer', 'owner', 'category'];
-	const orderWays = ['ASC', 'DESC', 'asc', 'desc'];
-
-  if(!sortColumns.includes(sort_by)) {
+exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category, limit = 10, p = 1) => {
+  if(!['votes', 'created_at', 'title', 'designer', 'owner', 'category'].includes(sort_by)) {
     return Promise.reject({status:400, msg: 'Invalid sort_by query input'})
   } 
 
-  if(!orderWays.includes(order)) {
+  if(!['ASC', 'DESC', 'asc', 'desc'].includes(order)) {
     return Promise.reject({status:400, msg: 'Invalid order query input'})
   } else {
+    const offset = (p - 1) * limit;
+    const queryVal = [limit, offset];
 
     let queryStr = `SELECT reviews.review_id, reviews.owner, reviews.title, reviews.votes, reviews.category, reviews.review_img_url, reviews.created_at, COUNT(comments.comment_id)::INT AS comment_count FROM reviews
     LEFT JOIN comments ON comments.review_id = reviews.review_id`;
   
-    const queryVal = [];
-  
     if(category) {
       queryVal.push(category);
-      queryStr += ` WHERE reviews.category = $1`;
+      queryStr += ` WHERE reviews.category = $3`;
     }
   
-    queryStr += ` GROUP BY reviews.review_id ORDER BY ${sort_by} ${order} LIMIT ${limit};`
+    queryStr += ` GROUP BY reviews.review_id ORDER BY ${sort_by} ${order} LIMIT $1 OFFSET $2;`
 
     return db
     .query(queryStr, queryVal)
     .then(({ rows }) => {
       if (rows.length === 0) {
-        return Promise.reject({ status: 404, msg: "No items found" });
+        return checkIfExists('categories', 'slug', category).then(() => {
+          return rows;
+        })
       }
       return rows;
     })
   }
 }
 
-exports.fetchCommentsByReview = (review_id) => {
-  const queryStr = `SELECT comments.comment_id, comments.votes, comments.created_at, comments.author, comments.body FROM comments
-  LEFT JOIN users ON comments.author = users.username
-  WHERE comments.review_id = $1;`;
-
-  const secondQueryStr = `SELECT * FROM reviews WHERE review_id = $1`;
-
-  const promise1 = db.query(queryStr, [review_id]);
-  const promise2 = db.query(secondQueryStr, [review_id]);
-
-  return Promise.all([promise1, promise2])
-  .then(([comments, reviews]) => {
-
-    if(comments.rows.length === 0) {
-      if (reviews.rows.length === 0) {
-        return Promise.reject({status:404, msg:'Review_id does not exist'});
-      } 
-      return comments.rows;
-    }
-    return comments.rows;
-  })
-}
-
-exports.addNewComment = (review_id, postedComment) => {
-  
-  return checkIfExists("reviews", "review_id", review_id)
-  .then(() => {
-    if (Object.keys(postedComment).length !== 2) {
-      return Promise.reject({ status: 400, msg: "Invalid request body" });
-    }
-    const validColumns = ["username", "body"];
-    for (let i = 0; i < validColumns.length; i++) {
-    if (!postedComment.hasOwnProperty(validColumns[i])) {
-      return Promise.reject({ status: 400, msg: "Invalid request body" });
-    }
-  }
-    const { username, body } = postedComment;
-    return checkIfExists("users", "username", username)
-    .then(() => {
-      return db.query(`
-        INSERT INTO comments (author, review_id, body) 
-        VALUES ($1, $2, $3) RETURNING *;`, [username, review_id, body])
-    })
-    .then(({ rows }) => {
-      return rows[0]
-    })
-  })
-}
