@@ -2,7 +2,9 @@ const { fetchCommentsByReview, addNewComment, deleteCommentById, updateComVotes 
 
 exports.getCommentsByReview = (req, res, next) => {
     const { review_id } = req.params;
-    fetchCommentsByReview(review_id)
+    const { limit, p } = req.query;
+
+    fetchCommentsByReview(review_id, limit, p)
     .then((comments) => {
         res.status(200).send({ comments })
     })

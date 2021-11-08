@@ -1,4 +1,3 @@
-//const { query } = require("../db/index");
 const db = require('../db/index.js');
 
 exports.fetchAllCategories = () => {

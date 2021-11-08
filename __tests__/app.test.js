@@ -369,6 +369,46 @@ describe('/api/reviews', () => {
         expect(body.reviews).toHaveLength(4);
       })
     })
+
+    it('responds with 400 if passed with an invlid p query ie. not a number', () => {
+      const p = 'not_a_number';
+      return request(app)
+      .get(`/api/reviews?p=${p}`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request - invalid data type');
+      })
+    })
+
+    it('responds with 404 if passed with a page that doesn\'t exist', () => {
+      const p = 999;
+      return request(app)
+      .get(`/api/reviews?p=${p}`)
+      .expect(404)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Page not found.');
+      })
+    })
+
+    it('responds with 400 if passed with a p query that is less or equal to 0', () => {
+      const p = 0;
+      return request(app)
+      .get(`/api/reviews?p=${p}`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request - invalid page query');
+      })
+    })
+
+    it('responds with 400 if passed a limit query that\'s less than 1', () => {
+      const limit = 0;
+      return request(app)
+      .get(`/api/reviews?limit=${limit}`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe("Invalid limit query.");
+      })
+    })
   })
 })
 
@@ -440,6 +480,50 @@ describe('/api.reviews/:review_id/comments', () => {
       .expect(404)
       .then(({ body }) => {
         expect(body.msg).toBe('Path not found')
+      })
+    })
+
+    it('responds with 200 and accepts a query limit', () => {
+      const review_id = 2;
+      const limit = 2;
+      return request(app)
+      .get(`/api/reviews/${review_id}/comments?limit=${limit}`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments).toHaveLength(2);
+      })
+    })
+
+    it('responds with 400 if passed with an invalid limit query ie. not a number', () => {
+      const review_id = 2;
+      const limit = 'not_a_number';
+      return request(app)
+      .get(`/api/reviews/${review_id}/comments?limit=${limit}`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request - invalid data type');
+      })
+    })
+
+    it('responds with 200 and accepts a "p" query returning reviews for that page', () => {
+      const review_id = 2;
+      const p = 1;
+      return request(app)
+      .get(`/api/reviews/${review_id}/comments?p=${p}`)
+      .expect(200)
+      .then(({ body }) => {
+        expect(body.comments).toHaveLength(3);
+      })
+    })
+
+    it('responds with 400 if passed with an invlid p query ie. not a number', () => {
+      const review_id = 2;
+      const p = 'not_a_number';
+      return request(app)
+      .get(`/api/reviews/${review_id}/comments?p=${p}`)
+      .expect(400)
+      .then(({ body }) => {
+        expect(body.msg).toBe('Bad request - invalid data type');
       })
     })
   })
@@ -781,16 +865,6 @@ describe('/api/users/:username', () => {
         expect(body.msg).toBe('Path not found')
       })
     })
-
-    // it('responds with 400 if passed with an invalid username data type ie. not a string', () => {
-    //   const username = 999;
-    //   return request(app)
-    //   .get(`/api/users/${username}`)
-    //   .expect(400)
-    //   .then(({ body }) => {
-    //     expect(body.msg).toBe('Bad request')
-    //   })
-    // })
   })
 })
 

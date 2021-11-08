@@ -35,16 +35,21 @@ exports.updateVotes = (review_id, inc_votes = 0) => {
 }
 
 exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category, limit = 10, p = 1) => {
+  if(p < 1) {
+    return Promise.reject({status: 400, msg: 'Bad request - invalid page query'})
+  }
+  if (limit < 1) return Promise.reject({status: 400, msg: "Invalid limit query."});
+  if (limit > 10) return Promise.reject({status: 400, msg: "Limit query exceeds maximum of 10."});
   if(!['votes', 'created_at', 'title', 'designer', 'owner', 'category'].includes(sort_by)) {
     return Promise.reject({status:400, msg: 'Invalid sort_by query input'})
   } 
-
   if(!['ASC', 'DESC', 'asc', 'desc'].includes(order)) {
     return Promise.reject({status:400, msg: 'Invalid order query input'})
   } else {
     const offset = (p - 1) * limit;
-    const queryVal = [limit, offset];
 
+    const queryVal = [limit, offset];
+    
     let queryStr = `SELECT reviews.review_id, reviews.owner, reviews.title, reviews.votes, reviews.category, reviews.review_img_url, reviews.created_at, COUNT(comments.comment_id)::INT AS comment_count FROM reviews
     LEFT JOIN comments ON comments.review_id = reviews.review_id`;
   
@@ -59,9 +64,13 @@ exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category, lim
     .query(queryStr, queryVal)
     .then(({ rows }) => {
       if (rows.length === 0) {
-        return checkIfExists('categories', 'slug', category).then(() => {
-          return rows;
-        })
+        if(category) {
+          return checkIfExists('categories', 'slug', category).then(() => {
+            return rows;
+          })
+        } else {
+          return Promise.reject({status:404, msg: `Page not found.`})
+        }
       }
       return rows;
     })
