@@ -1,7 +1,7 @@
 const db = require('../db/index.js');
 
 exports.fetchUsers = () => {
-    return db.query(`SELECT username FROM users;`)
+    return db.query(`SELECT * FROM users;`)
     .then(({ rows }) => {
         return rows
     })
