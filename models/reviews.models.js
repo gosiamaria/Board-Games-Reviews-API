@@ -50,7 +50,7 @@ exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category, lim
 
     const queryVal = [limit, offset];
     
-    let queryStr = `SELECT reviews.review_id, reviews.owner, reviews.title, reviews.votes, reviews.category, reviews.review_img_url, reviews.created_at, review.review_body COUNT(comments.comment_id)::INT AS comment_count FROM reviews
+    let queryStr = `SELECT reviews.review_id, reviews.owner, reviews.title, reviews.votes, reviews.category, reviews.review_img_url, reviews.created_at, COUNT(comments.comment_id)::INT AS comment_count FROM reviews
     LEFT JOIN comments ON comments.review_id = reviews.review_id`;
   
     if(category) {
