@@ -39,7 +39,6 @@ exports.fetchAllReviews = (sort_by = 'created_at', order = 'desc', category, lim
     return Promise.reject({status: 400, msg: 'Bad request - invalid page query'})
   }
   if (limit < 1) return Promise.reject({status: 400, msg: "Invalid limit query."});
-  if (limit > 10) return Promise.reject({status: 400, msg: "Limit query exceeds maximum of 10."});
   if(!['votes', 'created_at', 'title', 'designer', 'owner', 'category'].includes(sort_by)) {
     return Promise.reject({status:400, msg: 'Invalid sort_by query input'})
   } 
